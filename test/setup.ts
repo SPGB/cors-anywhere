@@ -1,17 +1,16 @@
-var nock = require('nock');
+import * as http from 'http';
+import * as nock from 'nock';
 if (parseInt(process.versions.node, 10) >= 8) {
   // See DEP0066 at https://nodejs.org/api/deprecations.html.
   // _headers and _headerNames have been removed from Node v8, which causes
   // nock <= 9.0.13 to fail. The snippet below monkey-patches the library, see
   // https://github.com/node-nock/nock/pull/929/commits/f6369d0edd2a172024124f
   // for the equivalent logic without proxies.
-  Object.defineProperty(require('http').ClientRequest.prototype, '_headers', {
-    get: function() {
-      var request = this;
-      // eslint-disable-next-line no-undef
-      return new Proxy(request.getHeaders(), {
-        set: function(target, property, value) {
-          request.setHeader(property, value);
+  Object.defineProperty(http.ClientRequest.prototype, '_headers', {
+    get: function () {
+      return new Proxy(this.getHeaders(), {
+        set: (target, property, value) => {
+          this.setHeader(property, value);
           return true;
         },
       });
@@ -29,8 +28,8 @@ function echoheaders(origin) {
     .persist()
     .get('/echoheaders')
     .reply(function() {
-      var headers = this.req.headers;
-      var excluded_headers = [
+      const headers = this.req.headers;
+      const excluded_headers = [
         'accept-encoding',
         'user-agent',
         'connection',
@@ -42,7 +41,7 @@ function echoheaders(origin) {
         excluded_headers.push('x-forwarded-port');
         excluded_headers.push('x-forwarded-proto');
       }
-      var response = {};
+      const response = {};
       Object.keys(headers).forEach(function(name) {
         if (excluded_headers.indexOf(name) === -1) {
           response[name] = headers[name];

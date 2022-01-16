@@ -11,11 +11,11 @@
 /* eslint-env mocha */
 require('./setup');
 
-var createServer = require('../').createServer;
-var assert = require('assert');
-var request = require('supertest');
+import * as assert from 'assert';
+import * as request from 'supertest';
 
-var http = require('http');
+import * as http from 'http';
+import { createServer } from '../lib/cors-anywhere';
 
 describe('Examples', function() {
   // Note: In the examples below we don't listen on any port after calling
@@ -30,9 +30,9 @@ describe('Examples', function() {
   // the examples don't have an explicit .listen() call.
 
   it('Rewrite proxy URL', function(done) {
-    var cors_anywhere = createServer();
+    const cors_anywhere = createServer({});
 
-    var http_server = http.createServer(function(req, res) {
+    const http_server = http.createServer(function(req, res) {
       // For testing, check whether req.url is the same as what we input below.
       assert.strictEqual(req.url, '/dummy-for-testing');
 
@@ -50,12 +50,12 @@ describe('Examples', function() {
   });
 
   it('Transform response to uppercase (streaming)', function(done) {
-    var cors_anywhere = createServer();
+    const cors_anywhere = createServer({});
 
-    var http_server = http.createServer(function(req, res) {
-      var originalWrite = res.write;
+    const http_server = http.createServer(function(req, res) {
+      const originalWrite = res.write;
 
-      res.write = function(data, encoding, callback) {
+      res.write( (data, encoding, callback) => {
         if (Buffer.isBuffer(data)) {
           data = data.toString();
         }
@@ -66,7 +66,7 @@ describe('Examples', function() {
         data = data.toUpperCase();
 
         originalWrite.call(this, data, encoding, callback);
-      };
+      });
 
       cors_anywhere.emit('request', req, res);
     });
@@ -79,23 +79,23 @@ describe('Examples', function() {
   });
 
   it('Transform response to uppercase (buffered)', function(done) {
-    var cors_anywhere = createServer();
+    const cors_anywhere = createServer({});
 
-    var http_server = http.createServer(function(req, res) {
-      var originalWrite = res.write;
-      var originalEnd = res.end;
+    const http_server = http.createServer(function(req, res) {
+      const originalWrite = res.write;
+      const originalEnd = res.end;
 
-      var buffers = [];
+      const buffers = [];
 
-      res.write = function(data, encoding, callback) {
+      res.write((data, encoding, callback) => {
         assert.ok(Buffer.isBuffer(data) || typeof data === 'string');
 
         buffers.push(data);
         if (callback) {
           process.nextTick(callback, null);
         }
-      };
-      res.end = function(data, encoding, callback) {
+      });
+      res.end((data, encoding, callback) => {
         if (data) {
           this.write(data, encoding);
         }
@@ -118,7 +118,7 @@ describe('Examples', function() {
         // error handling occurs if it occurs again.
         this.end = originalEnd;
         this.end(data, 'utf8', callback);
-      };
+      });
 
       cors_anywhere.emit('request', req, res);
     });

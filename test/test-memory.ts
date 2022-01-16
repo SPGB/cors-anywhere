@@ -1,17 +1,17 @@
 /* eslint-env mocha */
 // Run this specific test using:
 // npm test -- -f memory
-var http = require('http');
-var path = require('path');
-var url = require('url');
-var fork = require('child_process').fork;
+import * as http from 'http';
+import * as path from 'path';
+import * as url from 'url';
+import { fork } from 'child_process';
 
 describe('memory usage', function() {
   var cors_api_url;
 
   var server;
   var cors_anywhere_child;
-  before(function(done) {
+  beforeAll(function(done) {
     server = http.createServer(function(req, res) {
       res.writeHead(200);
       res.end();
@@ -20,7 +20,7 @@ describe('memory usage', function() {
     });
   });
 
-  after(function(done) {
+  afterAll(function(done) {
     server.close(function() {
       done();
     });
@@ -69,10 +69,10 @@ describe('memory usage', function() {
     var remaining = n;
     var request = url.parse(
         cors_api_url + 'http://127.0.0.1:' + server.address().port);
-    request.agent = false; // Force Connection: Close
-    request.headers = {
-      'Long-header': new Array(requestSize * 1e3).join('x'),
-    };
+    // request.agent = false; // Force Connection: Close
+    // request.headers = {
+    //   'Long-header': new Array(requestSize * 1e3).join('x'),
+    // };
     (function requestAgain() {
       if (remaining-- === 0) {
         cors_anywhere_child.once('message', function(memory_usage_delta) {
